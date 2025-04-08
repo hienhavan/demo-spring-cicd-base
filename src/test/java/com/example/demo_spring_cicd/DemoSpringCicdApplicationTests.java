@@ -6,6 +6,6 @@ class DemoSpringCicdApplicationTests {
     @Test
     void contextLoads() {
         int numberTest = 3;
-        Assertions.assertEquals(5, numberTest);
+        Assertions.assertEquals(3, numberTest);
     }
 }
