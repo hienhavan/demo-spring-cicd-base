@@ -1,27 +1,53 @@
-#ci
 name: demo-cicd
+
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-      - name: set up jdk21
-        uses:  actions/setup-java@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'adopt'
-          cache: gradle
+          cache: gradle #cache: gradle: giúp lưu lại cache giữa các lần build, tăng tốc độ.
+
+      - name: Check Java version
+        run: java -version
+
+      #Cấp quyền thực thi cho gradlew
+#      Tác dụng: Cho phép file gradlew (Gradle Wrapper) có thể chạy được.
+#      Vì sao cần: Trên Linux, file script cần có quyền thực thi (chmod +x) mới chạy được.
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build --no-daemon
 
       - name: Run tests
-        run: ./gradlew tes
+        run: ./gradlew test --no-daemon
+
+      #Lưu file test report để người khác có thể tải về xem.
+      - name: Archive test results
+        if: always() # chạy kể cả khi test fail
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: build/test-results/test
+
+      #Lưu file .jar được build thành công, có thể dùng để deploy hoặc chia sẻ.
+      #if: success(): chỉ upload nếu build thành công
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifact
+          path: build/libs/*.jar
